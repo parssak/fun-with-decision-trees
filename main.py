@@ -77,6 +77,137 @@ def select_model(train_X, train_Y, val_X, val_Y):
     print('Best model:', best_model, best_model.criterion)
     return best_model
 
+
+'''
+    Computes the information gain of a split on the training data
+    Compute I(Y;X) for each attribute value x_i
+    Compute H(Y) = -sum(p(y)*log2(p(y)))
+    Compute H(Y|X) = H(Y) - sum(p(y|x)*I(Y;X))
+    Return the information gain of the split
+'''
+'''
+
+=======
+
+def compute_information_gain(y, x):
+    y_prob = np.bincount(y) / len(y)
+    x_prob = np.bincount(x) / len(x)
+    y_x_prob = np.multiply(y_prob, x_prob)
+    y_x_prob = y_x_prob / np.sum(y_x_prob)
+
+    h_y = -np.sum(y_prob * np.log2(y_prob))
+    h_y_x = h_y - np.sum(y_x_prob * np.log2(y_x_prob))
+    return h_y_x
+
+=======
+
+def compute_information_gain(Y, X):
+    H_Y = 0
+    H_Y_X = 0
+    for y in Y:
+        p_y = sum(y) / len(Y)
+        if p_y == 0:
+            continue
+        H_Y -= p_y * np.log2(p_y)
+    for y in Y:
+        p_y_x = sum(y[X == 1]) / sum(y)
+        if p_y_x == 0:
+            continue
+        H_Y_X -= p_y_x * np.log2(p_y_x)
+    return H_Y - H_Y_X
+
+=======
+
+def compute_information_gain(X, Y):
+    H = 0
+    for i in range(X.shape[1]):
+        X_i = X[:, i]
+        H_i = 0
+        for x_i, y_i in zip(X_i, Y):
+            p_y_i = sum(Y)/len(Y)
+            p_y_i_x_i = sum(X_i == x_i)/len(X_i)
+            p_y_i_x_i_y_i = p_y_i_x_i * p_y_i
+            H_i += p_y_i_x_i_y_i * np.log2(p_y_i_x_i_y_i)
+        H += H_i
+    return H - sum(Y)/len(Y) * sum(X.sum(axis=0) * np.log2(X.sum(axis=0)))
+
+=======
+
+def compute_information_gain(X, Y):
+    H = -sum(Y*np.log2(Y))
+    H_Y_X = []
+    for i in range(len(X[0])):
+        H_Y_X.append(0)
+        for j in range(len(X)):
+            if X[j][i] == 1:
+                H_Y_X[i] -= sum(Y[j]*np.log2(Y[j]))
+            else:
+                H_Y_X[i] -= sum(1-Y[j]*np.log2(1-Y[j]))
+    return H - sum(H_Y_X)
+
+=======
+
+def compute_information_gain(train_Y, train_X, split_criteria):
+    n = len(train_Y)
+    H = -sum(train_Y * np.log2(train_Y))
+    for i in range(train_X.shape[1]):
+        x_i = train_X[:, i]
+        p_x_i = np.count_nonzero(x_i) / n
+        if split_criteria == 'gini':
+            H -= p_x_i * (1 - p_x_i)
+        elif split_criteria == 'entropy':
+            H -= p_x_i * np.log2(p_x_i)
+    return H
+
+=======
+
+def compute_information_gain(X, Y, attribute_index, threshold):
+    # Compute the entropy of Y
+    H = -np.sum(np.log2(Y + 1e-10) * Y + 1e-10)
+
+    # Compute the entropy of Y|X
+    H_X = 0
+    for i in range(len(X)):
+        # Compute the information gain of the split
+        if X[i][attribute_index] < threshold:
+            H_X += Y[i] * np.log2(Y[i] / (Y[i] + 1e-10))
+        else:
+            H_X += (1 - Y[i]) * np.log2((1 - Y[i]) / ((1 - Y[i]) + 1e-10))
+
+    return H - H_X
+
+=======
+
+def compute_information_gain(X, Y, split_criteria):
+
+=======
+
+def compute_information_gain(y, x):
+
+=======
+
+def compute_information_gain(X, y, attribute_value, attribute_index):
+    attribute_values = X[:, attribute_index]
+    y_values = y
+
+    # Compute the entropy of the entire set
+    H = 0
+    n = len(y_values)
+    for y_value in np.unique(y_values):
+        p_y = np.sum(y_values == y_value) / n
+        H -= p_y * np.log2(p_y)
+
+    # Compute the entropy for the subset of the data
+    H_X = 0
+    for attribute_value in np.unique(attribute_values):
+        p_x = np.sum(attribute_values == attribute_value) / n
+        y_values_X = y_values[attribute_values == attribute_value]
+        H_X -= p_x * compute_information_gain(
+            X, y_values_X, attribute_value, attribute_index)
+
+    return H - H_X
+
+'''
     
 def main():
     train_X, val_X, test_X, train_Y, val_Y, test_Y = load_data()
